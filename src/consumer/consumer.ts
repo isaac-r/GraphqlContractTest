@@ -1,5 +1,4 @@
 import { ApolloClient, InMemoryCache, gql } from '@apollo/client/core';
-import { QUERY } from '../constants';
 
 const client = new ApolloClient({
     uri: 'http://localhost:4000/graphql',
@@ -9,7 +8,7 @@ const client = new ApolloClient({
 export function query(): any {
   return client
   .query({
-    query: gql(QUERY), // Use the minified query string
+    query: gql(`AllExpenses { expenses { id name venue amount date __typename } }`),
 })
     .then((result: any) => result.data);
 }
