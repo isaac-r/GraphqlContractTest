@@ -1,8 +1,10 @@
-import { expressMiddleware } from '@apollo/server/express4';
+import createMockServer from "../helpers/createMockServer";
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
-import express from 'express';
 import http from 'http';
+import { Verifier } from "@pact-foundation/pact";
+import express from 'express';
+import { log } from "console";
 
 const typeDefs = `#graphql
   type Expense {
@@ -33,9 +35,10 @@ const resolvers = {
 };
 
 const app = express();
+
 const httpServer = http.createServer(app);
 
-const server = new ApolloServer({
+export const server = new ApolloServer({
   typeDefs,
   resolvers,
   csrfPrevention: true,
@@ -45,20 +48,25 @@ const server = new ApolloServer({
   ],
 });
 
-async function startApolloServer() {
-  await server.start().then(async () => {
-    app.use(
-      '/graphql',
-      expressMiddleware(server),
-    );
-
-    await new Promise<void>((resolve) => { httpServer.listen({ port: 4000 }, resolve); });
-
-    app.get('/status', (_, res) => {
-      res.status(200).send('OK');
+describe('Pact Verification', () => {
+    beforeAll(async () => {
+        await createMockServer(server, app, httpServer);
+        console.log('Mock server started');
     });
-    console.log('🚀 Server Ready on http://localhost:4000/graphql');
-  });
-}
-
-startApolloServer();
+    afterAll(async () => {
+        await server.stop();
+    });
+    it('should verify the pact', async () => {
+        const opts = {
+            provider: 'GraphQLProvider',
+            providerBaseUrl: 'http://localhost:4000/graphql',
+            pactUrls: ['./pacts/GraphQLConsumer-GraphQLProvider.json'],
+            timeout: 60000,
+        };
+        console.log('Starting Pact verification...');
+        const verifier = new Verifier(opts);
+        return verifier.verifyProvider().then(async () => {
+            console.log('Pact verification completed');
+        });
+    });
+});
