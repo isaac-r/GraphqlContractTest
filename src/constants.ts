@@ -1,0 +1,1 @@
+export const QUERY = `query { expenses { id name venue amount date __typename } }`;
