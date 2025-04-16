@@ -3,6 +3,7 @@ import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import express from 'express';
 import http from 'http';
+import bodyParser from 'body-parser';
 
 const typeDefs = `#graphql
   type Expense {
@@ -28,7 +29,7 @@ const expenses = [
 const resolvers = {
   Query: {
     expenses: () => expenses,
-    expenseById: (_, { id }) => expenses.find(expense => expense.id === parseInt(id)),
+    expenseById: (_, { id }) => expenses.find(expense => expense.id === parseInt(id.toString())),
   },
 };
 
@@ -49,6 +50,7 @@ async function startApolloServer() {
   await server.start().then(async () => {
     app.use(
       '/graphql',
+      bodyParser.json(),
       expressMiddleware(server),
     );
 

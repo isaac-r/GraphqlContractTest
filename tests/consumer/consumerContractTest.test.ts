@@ -2,7 +2,7 @@ import { GraphQLInteraction, Matchers, Pact } from "@pact-foundation/pact";
 import { ApolloClient, gql, InMemoryCache } from "@apollo/client/core";
 
 const provider = new Pact({
-    dir: "./pacts", // to do: change to your desired directory
+    dir: "./pacts",
     port: 4000,
     consumer: "GraphQLConsumer",
     provider: "GraphQLProvider",
@@ -10,12 +10,17 @@ const provider = new Pact({
 });
 
 const expensesExample = [
-    { id: 1, name: 'Lunch', venue: 'Cafe', amount: 15.5, date: '2023-10-01', __typename: 'Expense' },
-    { id: 2, name: 'Dinner', venue: 'Restaurant', amount: 25.0, date: '2023-10-02', __typename: 'Expense' },
-    { id: 3, name: 'Groceries', venue: 'Supermarket', amount: 50.0, date: '2023-10-03', __typename: 'Expense' }
+    { id: "1", name: 'Lunch', venue: 'Cafe', amount: 15.5, date: '2023-10-01', __typename: 'Expense' }
 ];
 
-const expectedExpensesBody = Matchers.like(expensesExample);
+const expectedExpensesBody = Matchers.eachLike({
+    id: Matchers.regex({ generate: '1', matcher: '^\\d+$' }), // Matches either a string or an integer
+    name: Matchers.like("Lunch"),
+    venue: Matchers.like("Cafe"),
+    amount: Matchers.like(15.5),
+    date: Matchers.like("2023-10-01"),
+    __typename: Matchers.like("Expense"),
+});
 
 const GET_ALL_EXPENSES = gql`query AllExpenses { expenses { id name venue amount date __typename } }`;
 

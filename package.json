@@ -6,7 +6,9 @@
   "scripts": {
     "compile": "tsc",
     "start": "npm run compile && node ./dist/src/index.js",
-    "test": "jest"
+    "test": "jest --forceExit",
+    "test:consumer": "jest tests/consumer/consumerContractTest.test.ts",
+    "test:provider": "jest tests/provider/providerContractTest.test.ts"
   },
   "author": "",
   "license": "ISC",
